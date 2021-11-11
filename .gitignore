@@ -1,0 +1,15 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+
+# Dirs
+bin/
+lib/
+data/
+checkpoint/
+
+# Files
+preprocess.py
+credentials.json
+results.json
+dataset.json
