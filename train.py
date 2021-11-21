@@ -24,7 +24,7 @@ def main():
     abspath = Path(__file__).parent.absolute()
     data_path = os.path.join(abspath, 'data/')
     data_type = 'train'
-    batch_size = 10
+    batch_size = 25
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -49,10 +49,14 @@ def main():
     else:
         start_epoch = 0
 
-    num_epochs = 17
+    # Number of epochs
+    num_epochs = 100
     net.train()
     net.to(device)
     optimizer = torch.optim.Adam(net.parameters(), lr, weight_decay=0.0005)
+
+    if (Path(savepath).is_file()):
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     print('Starting training...')
 
@@ -77,9 +81,10 @@ def main():
 
 
         for epoch in range(start_epoch, num_epochs):
+            print(f'Epoch: {epoch}')
             if epoch >= 8:
                 lr = 0.0001
-            loss_history_epoch[epoch] = []
+            loss_history_epoch[f'epoch_{epoch}'] = []
             for i, data in enumerate(trainLoader):
                 # Execute a training step
                 loss = net.training_step(data, device)
@@ -88,19 +93,18 @@ def main():
                 optimizer.step()
                 # Register the loss along the training process
                 loss_history['all'].append(loss.item())
-                loss_history_epoch[epoch].append(loss.item())
-                if i == 20:
+                loss_history_epoch[f'epoch_{epoch}'].append(loss.item())
+                if i == 10:
                     break;
 
-            if epoch == 10:
-                torch.save({
-                    'epoch': epoch,
-                    'model_state_dict': net.state_dict(),
-                    'optimizer_state_dict': optimizer.state_dict(),
-                    'loss': loss,
-                    'lr': lr,
-                }, savepath)
-            if epoch > 1:
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': net.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss,
+                'lr': lr,
+            }, savepath)
+            if epoch > 0:
                 break;
         # Training process is complete.
         print('Training process has finished. Saving trained model.')
@@ -132,15 +136,17 @@ def main():
                     break
 
             mean_error = np.mean(np.asarray(errors)) / 38 # convert from pixels to cm
-            results[fold] = mean_error
-            print(f"error: {mean_error}")
-        if fold > 1:
+            results[f'fold_{fold}_mean_error'] = mean_error
+            print(f'fold: {fold}, mean error: {mean_error}')
+
+        results[f'fold_{fold}_loss_epoch'] = loss_history_epoch
+        if fold > 0:
             break
 
-    results['loss_epoch'] = loss_history_epoch
-    results['loss_all'] = loss_history
+    results[f'loss_all'] = loss_history
 
     with open('results.json', 'w') as file:
+        print('Creating results json file...')
         json.dump(results, file)
         
 
