@@ -24,7 +24,7 @@ def main():
     abspath = Path(__file__).parent.absolute()
     data_path = os.path.join(abspath, 'data/')
     data_type = 'train'
-    batch_size = 25
+    batch_size = 32
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -50,7 +50,7 @@ def main():
         start_epoch = 0
 
     # Number of epochs
-    num_epochs = 100
+    num_epochs = 20
     net.train()
     net.to(device)
     optimizer = torch.optim.Adam(net.parameters(), lr, weight_decay=0.0005)
@@ -81,9 +81,8 @@ def main():
 
 
         for epoch in range(start_epoch, num_epochs):
-            print(f'Epoch: {epoch}')
-            if epoch >= 8:
-                lr = 0.0001
+            lr = 0.001 if epoch < 12 else 0.0001
+            print(f'Epoch: {epoch}, lr: {lr}')
             loss_history_epoch[f'epoch_{epoch}'] = []
             for i, data in enumerate(trainLoader):
                 # Execute a training step
@@ -94,8 +93,9 @@ def main():
                 # Register the loss along the training process
                 loss_history['all'].append(loss.item())
                 loss_history_epoch[f'epoch_{epoch}'].append(loss.item())
-                if i == 10:
-                    break;
+                print(f'loss: {loss.item()}', end='\r')
+                # if i == 10:
+                #     break;
 
             torch.save({
                 'epoch': epoch,
@@ -104,8 +104,8 @@ def main():
                 'loss': loss,
                 'lr': lr,
             }, savepath)
-            if epoch > 0:
-                break;
+            # if epoch > 0:
+            #     break;
         # Training process is complete.
         print('Training process has finished. Saving trained model.')
 
@@ -132,16 +132,16 @@ def main():
                     xyTrue = [labels[k][0]*resolution[k][0], labels[k][1]*resolution[k][1]]
                     errors.append(dist(xyGaze, xyTrue))
 
-                if i == 50:
-                    break
+                # if i == 50:
+                #     break
 
             mean_error = np.mean(np.asarray(errors)) / 38 # convert from pixels to cm
             results[f'fold_{fold}_mean_error'] = mean_error
             print(f'fold: {fold}, mean error: {mean_error}')
 
         results[f'fold_{fold}_loss_epoch'] = loss_history_epoch
-        if fold > 0:
-            break
+        # if fold > 0:
+        #     break
 
     results[f'loss_all'] = loss_history
 
