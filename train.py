@@ -56,7 +56,7 @@ def main():
         # Create new model
         net = Model()
         # Learning rate
-        lr = 0.001
+        lr = 0.01
         # Train
         net.train()
         # Load data into gpu
@@ -72,7 +72,7 @@ def main():
 
         for epoch in range(num_epochs):
             # lr = 0.001 if epoch < num_eppochs // 2 else 0.0001
-            if epoch > num_epochs // 2: lr = 0.0001
+            if epoch > num_epochs // 2: lr = 0.001
             print(f'Fold: {fold}, Epoch: {epoch}, lr: {lr}')
             results[f'fold-{fold}']['loss'].append([])
             for i, data in enumerate(trainLoader):
