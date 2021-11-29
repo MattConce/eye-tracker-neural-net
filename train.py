@@ -24,41 +24,16 @@ def main():
     abspath = Path(__file__).parent.absolute()
     data_path = os.path.join(abspath, 'data/')
     data_type = 'train'
-    batch_size = 32
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     if not os.path.exists(os.path.join(abspath, 'checkpoint')):
         os.mkdir(os.path.join(abspath, 'checkpoint'))
 
-    savepath = os.path.join(abspath,'checkpoint/checkpoint.tar')
-
-
-    # Create the model
-    net = Model()
-
-    # Learning rate
-    lr = 0.001
-
-    if (Path(savepath).is_file()):
-        checkpoint = torch.load(savepath)
-        net.load_state_dict(checkpoint['model_state_dict'])
-        start_epoch = checkpoint['epoch']
-        loss = checkpoint['loss']
-        lr = checkpoint['lr']
-    else:
-        start_epoch = 0
-
     # Number of epochs
-    num_epochs = 20
-    net.train()
-    net.to(device)
-    optimizer = torch.optim.Adam(net.parameters(), lr, weight_decay=0.0005)
-
-    if (Path(savepath).is_file()):
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-
-    print('Starting training...')
+    num_epochs = 100
+    # Batch size
+    batch_size = 16
 
     k_folds = 5
     kfold = KFold(n_splits=k_folds, shuffle=True)
@@ -69,7 +44,6 @@ def main():
     results = {}
     loss_history_epoch = {}
     loss_history = {}
-    loss_history['all'] = []
 
     for fold, (train_ids, test_ids) in enumerate(kfold.split(dataset)):
 
@@ -79,11 +53,28 @@ def main():
         trainLoader = DataLoader(dataset, batch_size=batch_size, shuffle=False, sampler=train_subsampler)
         testLoader = DataLoader(dataset, batch_size=batch_size, shuffle=False, sampler=test_subsampler)
 
+        # Create new model
+        net = Model()
+        # Learning rate
+        lr = 0.001
+        # Train
+        net.train()
+        # Load data into gpu
+        net.to(device)
+        # Create optimizer
+        optimizer = torch.optim.Adam(net.parameters(), lr, weight_decay=0.0005)
 
-        for epoch in range(start_epoch, num_epochs):
-            lr = 0.001 if epoch < 12 else 0.0001
-            print(f'Epoch: {epoch}, lr: {lr}')
-            loss_history_epoch[f'epoch_{epoch}'] = []
+        # Save the model in this path
+        savepath = os.path.join(abspath,f'checkpoint/checkpoint_{fold}-fold.tar')
+
+        print(f'Starting training {fold} fold...')
+        results[f'fold-{fold}'] = {'mean_error': 0, 'loss': []}
+
+        for epoch in range(num_epochs):
+            # lr = 0.001 if epoch < num_eppochs // 2 else 0.0001
+            if epoch > num_epochs // 2: lr = 0.0001
+            print(f'Fold: {fold}, Epoch: {epoch}, lr: {lr}')
+            results[f'fold-{fold}']['loss'].append([])
             for i, data in enumerate(trainLoader):
                 # Execute a training step
                 loss = net.training_step(data, device)
@@ -91,19 +82,19 @@ def main():
                 loss.backward()
                 optimizer.step()
                 # Register the loss along the training process
-                loss_history['all'].append(loss.item())
-                loss_history_epoch[f'epoch_{epoch}'].append(loss.item())
+                results[f'fold-{fold}']['loss'][epoch].append(loss.item())
                 print(f'loss: {loss.item()}', end='\r')
-                # if i == 10:
+                # if i == 3:
                 #     break;
 
-            torch.save({
-                'epoch': epoch,
-                'model_state_dict': net.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'loss': loss,
-                'lr': lr,
-            }, savepath)
+            if epoch % 10 == 0:
+                torch.save({
+                    'epoch': epoch,
+                    'model_state_dict': net.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'loss': loss,
+                    'lr': lr,
+                }, savepath)
             # if epoch > 0:
             #     break;
         # Training process is complete.
@@ -117,7 +108,7 @@ def main():
             'lr': lr,
         }, savepath)
 
-        print('Starting testing')
+        print(f'Starting testing for {fold}-fold...')
         # Evaluation for this fold
         with torch.no_grad():
             errors = []
@@ -132,18 +123,15 @@ def main():
                     xyTrue = [labels[k][0]*resolution[k][0], labels[k][1]*resolution[k][1]]
                     errors.append(dist(xyGaze, xyTrue))
 
-                # if i == 50:
+                # if i == 5:
                 #     break
 
             mean_error = np.mean(np.asarray(errors)) / 38 # convert from pixels to cm
-            results[f'fold_{fold}_mean_error'] = mean_error
+            results[f'fold-{fold}']['mean_error'] = mean_error
             print(f'fold: {fold}, mean error: {mean_error}')
 
-        results[f'fold_{fold}_loss_epoch'] = loss_history_epoch
         # if fold > 0:
         #     break
-
-    results[f'loss_all'] = loss_history
 
     with open('results.json', 'w') as file:
         print('Creating results json file...')
