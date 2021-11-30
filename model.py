@@ -130,8 +130,8 @@ class AdaGN(nn.Module):
         # Scale and shift parameters for each channel as for equation (2) from the paper
         shape = self.LeakyRelU(self.FC(ada_in))
         shape = shape.view([batch_size, 2, num_channels, 1, 1])  
-        scale = shape[:, 0, :, :, :]
-        shift = shape[:, 1, :, :, :]
+        shift = shape[:, 0, :, :, :]
+        scale = shape[:, 1, :, :, :]
 
         f_gn = f_in.view(batch_size * block, -1)
 

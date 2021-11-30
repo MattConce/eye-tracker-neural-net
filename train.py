@@ -31,7 +31,7 @@ def main():
         os.mkdir(os.path.join(abspath, 'checkpoint'))
 
     # Number of epochs
-    num_epochs = 110
+    num_epochs = 150
     # Batch size
     batch_size = 72
 
@@ -68,6 +68,7 @@ def main():
         savepath = os.path.join(abspath,f'checkpoint/checkpoint_{fold}-fold.tar')
 
         print(f'Starting training {fold} fold...')
+        results = {}
         results[f'fold-{fold}'] = {'mean_error': 0, 'loss': []}
 
         for epoch in range(num_epochs):
@@ -84,8 +85,8 @@ def main():
                 # Register the loss along the training process
                 results[f'fold-{fold}']['loss'][epoch].append(loss.item())
                 print(f'loss: {loss.item()}', end='\r')
-                # if i == 3:
-                #     break;
+                if i == 3:
+                    break;
 
             if epoch % 10 == 0:
                 torch.save({
@@ -95,8 +96,8 @@ def main():
                     'loss': loss,
                     'lr': lr,
                 }, savepath)
-            # if epoch > -1:
-            #     break;
+            if epoch > -1:
+                break;
         # Training process is complete.
         print('Training process has finished. Saving trained model.')
 
@@ -123,8 +124,8 @@ def main():
                     xyTrue = [labels[k][0]*resolution[k][0], labels[k][1]*resolution[k][1]]
                     errors.append(dist(xyGaze, xyTrue))
 
-                # if i == 5:
-                #     break
+                if i == 5:
+                    break
 
             mean_error = np.mean(np.asarray(errors)) / 38 # convert from pixels to cm
             results[f'fold-{fold}']['mean_error'] = mean_error
@@ -133,9 +134,9 @@ def main():
         # if fold > -1:
         #     break
 
-    with open('results.json', 'w') as file:
-        print('Creating results json file...')
-        json.dump(results, file)
+        with open(f'results_{fold}_fold.json', 'w') as file:
+            print('Creating results json file...')
+            json.dump(results, file)
         
 
     # print(f'K-FOLD CROSS VALIDATION RESULTS FOR {k_folds} FOLDS')
