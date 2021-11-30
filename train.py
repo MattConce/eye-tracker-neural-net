@@ -85,8 +85,8 @@ def main():
                 # Register the loss along the training process
                 results[f'fold-{fold}']['loss'][epoch].append(loss.item())
                 print(f'loss: {loss.item()}', end='\r')
-                if i == 3:
-                    break;
+                # if i == 3:
+                #     break;
 
             if epoch % 10 == 0:
                 torch.save({
@@ -96,8 +96,8 @@ def main():
                     'loss': loss,
                     'lr': lr,
                 }, savepath)
-            if epoch > -1:
-                break;
+            # if epoch > -1:
+            #     break;
         # Training process is complete.
         print('Training process has finished. Saving trained model.')
 
@@ -124,8 +124,8 @@ def main():
                     xyTrue = [labels[k][0]*resolution[k][0], labels[k][1]*resolution[k][1]]
                     errors.append(dist(xyGaze, xyTrue))
 
-                if i == 5:
-                    break
+                # if i == 5:
+                #     break
 
             mean_error = np.mean(np.asarray(errors)) / 38 # convert from pixels to cm
             results[f'fold-{fold}']['mean_error'] = mean_error
