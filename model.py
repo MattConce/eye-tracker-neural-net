@@ -143,7 +143,7 @@ class AdaGN(nn.Module):
         # Back to the original shape but with normal Group Normalization
         f_gn = f_gn.view(f_in.shape)
 
-        f_out = (scale) * f_gn + scale
+        f_out = (scale) * f_gn + shift
         return f_out
 
 
