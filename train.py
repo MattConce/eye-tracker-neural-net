@@ -33,7 +33,7 @@ def main():
     # Number of epochs
     num_epochs = 100
     # Batch size
-    batch_size = 16
+    batch_size = 256
 
     k_folds = 5
     kfold = KFold(n_splits=k_folds, shuffle=True)
@@ -72,7 +72,11 @@ def main():
 
         for epoch in range(num_epochs):
             # lr = 0.001 if epoch < num_eppochs // 2 else 0.0001
-            # if epoch > num_epochs // 2: lr = 0.0001
+            if epoch < 10:
+                lr = 0.01
+            else:
+                lr = 0.001
+            if epoch > num_epochs // 2: lr = 0.0001
             print(f'Fold: {fold}, Epoch: {epoch}, lr: {lr}')
             results[f'fold-{fold}']['loss'].append([])
             for i, data in enumerate(trainLoader):
@@ -95,7 +99,7 @@ def main():
                     'loss': loss,
                     'lr': lr,
                 }, savepath)
-            # if epoch > 0:
+            # if epoch > -1:
             #     break;
         # Training process is complete.
         print('Training process has finished. Saving trained model.')
@@ -130,7 +134,7 @@ def main():
             results[f'fold-{fold}']['mean_error'] = mean_error
             print(f'fold: {fold}, mean error: {mean_error}')
 
-        # if fold > 0:
+        # if fold > -1:
         #     break
 
     with open('results.json', 'w') as file:
