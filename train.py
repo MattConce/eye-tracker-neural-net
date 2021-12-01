@@ -31,7 +31,7 @@ def main():
         os.mkdir(os.path.join(abspath, 'checkpoint'))
 
     # Number of epochs
-    num_epochs = 50
+    num_epochs = 100 
     # Batch size
     batch_size = 64
 
@@ -73,7 +73,11 @@ def main():
 
         for epoch in range(num_epochs):
             # lr = 0.001 if epoch < num_eppochs // 2 else 0.0001
-            if epoch > num_epochs // 2: lr = 0.00001
+            if epoch > 25: 
+                lr = 0.00001
+            elif epoch > 50:
+                lr = 0.000002
+                
             print(f'Fold: {fold}, Epoch: {epoch}, lr: {lr}')
             results[f'fold-{fold}']['loss'].append([])
             for i, data in enumerate(trainLoader):
