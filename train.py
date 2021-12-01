@@ -31,9 +31,9 @@ def main():
         os.mkdir(os.path.join(abspath, 'checkpoint'))
 
     # Number of epochs
-    num_epochs = 150
+    num_epochs = 50
     # Batch size
-    batch_size = 72
+    batch_size = 64
 
     k_folds = 5
     kfold = KFold(n_splits=k_folds, shuffle=True)
@@ -56,7 +56,7 @@ def main():
         # Create new model
         net = Model()
         # Learning rate
-        lr = 0.01
+        lr = 0.0001
         # Train
         net.train()
         # Load data into gpu
@@ -73,7 +73,7 @@ def main():
 
         for epoch in range(num_epochs):
             # lr = 0.001 if epoch < num_eppochs // 2 else 0.0001
-            if epoch > num_epochs // 2: lr = 0.001
+            if epoch > num_epochs // 2: lr = 0.00001
             print(f'Fold: {fold}, Epoch: {epoch}, lr: {lr}')
             results[f'fold-{fold}']['loss'].append([])
             for i, data in enumerate(trainLoader):
