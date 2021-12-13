@@ -72,7 +72,6 @@ def main():
         results[f'fold-{fold}'] = {'mean_error': 0, 'loss': []}
 
         for epoch in range(num_epochs):
-            # lr = 0.001 if epoch < num_eppochs // 2 else 0.0001
             if epoch > 25: 
                 lr = 0.00001
             elif epoch > 50:
@@ -89,8 +88,6 @@ def main():
                 # Register the loss along the training process
                 results[f'fold-{fold}']['loss'][epoch].append(loss.item())
                 print(f'loss: {loss.item()}', end='\r')
-                # if i == 3:
-                #     break;
 
             if epoch % 10 == 0:
                 torch.save({
@@ -100,8 +97,6 @@ def main():
                     'loss': loss,
                     'lr': lr,
                 }, savepath)
-            # if epoch > -1:
-            #     break;
         # Training process is complete.
         print('Training process has finished. Saving trained model.')
 
@@ -128,29 +123,15 @@ def main():
                     xyTrue = [labels[k][0]*resolution[k][0], labels[k][1]*resolution[k][1]]
                     errors.append(dist(xyGaze, xyTrue))
 
-                # if i == 5:
-                #     break
-
             mean_error = np.mean(np.asarray(errors)) / 38 # convert from pixels to cm
             results[f'fold-{fold}']['mean_error'] = mean_error
             print(f'fold: {fold}, mean error: {mean_error}')
 
-        # if fold > -1:
-        #     break
 
         with open(f'results_{fold}_fold.json', 'w') as file:
             print('Creating results json file...')
             json.dump(results, file)
         
-
-    # print(f'K-FOLD CROSS VALIDATION RESULTS FOR {k_folds} FOLDS')
-    # print('--------------------------------')
-    # sum = 0.0
-    # for key, value in results.items():
-    #     print(f'Fold {key}: {value} cm')
-    #     sum += value
-    #     print(f'Average: {sum/len(results.items())} cm')
-
 
 if __name__ == '__main__':
     main()
